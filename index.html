@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#1a4d1e">
+<title>Calculadora de Campo</title>
+<style>
+:root {
+  --bg: #eef1ee; --card: #fff; --text: #1a1a1a; --border: #ddd; 
+  --primary: #1a4d1e; --primary-light: #3d7a42; --error: #c0392b;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,Roboto,sans-serif;margin:0;padding:12px;background:var(--bg);color:var(--text);max-width:520px;margin:0 auto;}
+h1{font-size:1.2rem;color:var(--primary);text-align:center;margin-bottom:15px;}
+.card{background:var(--card);border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 5px rgba(0,0,0,.1);}
+h2{font-size:1.1rem;margin:0 0 10px 0;border-bottom:2px solid var(--border);padding-bottom:5px;color:var(--primary);}
+.lbl{font-size:.8rem;font-weight:bold;margin-bottom:5px;display:block;opacity:0.8;}
+input, select {width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:1.1rem;margin-bottom:10px;font-weight:bold;}
+button.btn-accion{width:100%;padding:15px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:1.1rem;font-weight:bold;margin-top:5px;}
+.resultado{background:var(--primary);color:#fff;padding:15px;border-radius:10px;text-align:center;margin-top:10px;font-size:2.5rem;font-weight:900;}
+.resultado.error{background:var(--error);font-size:1.5rem;}
+.resultado span{font-size:1.2rem;font-weight:normal;}
+
+/* Estilos para la tabla de rellenos */
+.fila-relleno{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:5px;align-items:center;}
+.fila-relleno input{padding:8px;font-size:1rem;margin-bottom:0;text-align:center;}
+.res-relleno{font-weight:bold;color:var(--primary);text-align:center;font-size:1.1rem;background:#e8f5e9;border-radius:5px;padding:8px 0;}
+</style>
+</head>
+<body>
+
+<h1>🌾 Calculadora Unidad 7</h1>
+
+<!-- SECCION 1: MEDIDAS -->
+<div class="card">
+  <h2>📏 Calcular Toneladas</h2>
+  
+  <span class="lbl">Nº de Silo o Entresilo</span>
+  <input type="number" id="siloInput" placeholder="Ej: 315" oninput="calcularMedida()">
+  
+  <span class="lbl">Cereal</span>
+  <select id="cerealSelectMedida" onchange="calcularMedida()">
+    <option value="MAIZ">MAÍZ (PH 76)</option>
+    <option value="SORGO">SORGO (PH 72)</option>
+    <option value="SOJA">SOJA (PH 71)</option>
+    <option value="CEBADA">CEBADA (PH 66)</option>
+    <option value="GIRASOL">GIRASOL (PH 42)</option>
+    <option value="TRIGO">TRIGO (PH 78)</option>
+    <option value="MEZCLA">MEZCLA (PH 75)</option>
+  </select>
+  
+  <span class="lbl">Metros de vacío</span>
+  <input type="number" id="metrosInput" placeholder="Ej: 15.5" step="0.1" oninput="calcularMedida()">
+  
+  <div class="resultado" id="resMedida">0 <span>t</span></div>
+</div>
+
+<!-- SECCION 2: RELLENOS -->
+<div class="card">
+  <h2>⛽ Calcular Relleno</h2>
+  <p style="font-size:0.8rem;margin-top:-5px;">Poné el cereal, el silo y las toneladas actuales.</p>
+  
+  <span class="lbl">Cereal</span>
+  <select id="cerealSelectRelleno">
+    <option value="MAIZ">MAÍZ</option>
+    <option value="SORGO">SORGO</option>
+    <option value="SOJA">SOJA</option>
+    <option value="CEBADA">CEBADA</option>
+    <option value="GIRASOL">GIRASOL</option>
+    <option value="TRIGO">TRIGO</option>
+    <option value="MEZCLA">MEZCLA</option>
+  </select>
+
+  <div class="fila-relleno" style="font-size:0.7rem;font-weight:bold;text-align:center;opacity:0.7;">
+    <div>Silo</div>
+    <div>Tons Actuales</div>
+    <div>Falta</div>
+    <div></div>
+  </div>
+
+  <div id="listaRellenos">
+    <!-- Fila 1 -->
+    <div class="fila-relleno">
+      <input type="number" placeholder="Silo" class="in-silo" oninput="calcularRelleno(this)">
+      <input type="number" placeholder="Tons" class="in-tons" oninput="calcularRelleno(this)">
+      <div class="res-relleno">- t</div>
+      <div></div>
+    </div>
+    <!-- Fila 2 -->
+    <div class="fila-relleno">
+      <input type="number" placeholder="Silo" class="in-silo" oninput="calcularRelleno(this)">
+      <input type="number" placeholder="Tons" class="in-tons" oninput="calcularRelleno(this)">
+      <div class="res-relleno">- t</div>
+      <div></div>
+    </div>
+    <!-- Fila 3 -->
+    <div class="fila-relleno">
+      <input type="number" placeholder="Silo" class="in-silo" oninput="calcularRelleno(this)">
+      <input type="number" placeholder="Tons" class="in-tons" oninput="calcularRelleno(this)">
+      <div class="res-relleno">- t</div>
+      <div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PH_BASE = 80;
+const PH = { MAIZ:76, SORGO:72, SOJA:71, CEBADA:66, GIRASOL:42, TRIGO:78, MEZCLA:75 };
+const DATA = {
+  silos:[[0,1221],[0.5,1204],[1,1187],[1.5,1170],[2,1153],[2.5,1136],[3,1119],[3.5,1102],[4,1085],[4.5,1068],[5,1051],[5.5,1034],[6,1017],[6.5,1000],[7,983],[7.5,966],[8,949],[8.5,932],[9,915],[9.5,898],[10,881],[10.5,864],[11,847],[11.5,830],[12,813],[12.5,796],[13,779],[13.5,762],[14,745],[14.5,728],[15,711],[15.5,694],[16,677],[16.5,660],[17,643],[17.5,626],[18,609],[18.5,592],[19,575],[19.5,558],[20,541],[20.5,524],[21,507],[21.5,490],[22,473],[22.5,456],[23,439],[23.5,422],[24,405],[24.5,388],[25,371],[25.5,354],[26,337],[26.5,320],[27,303],[27.5,286],[28,269],[28.5,252],[29,235],[29.5,218],[30,201],[30.5,184],[31,167],[31.5,150],[32,133],[32.5,116],[33,99],[33.5,82],[34,65],[34.5,48],[35,31],[35.5,23],[36,13],[36.5,8],[37,3.4],[37.5,1]],
+  entresilos:[[0,311.5],[0.5,307.25],[1,303],[1.5,298.75],[2,294.5],[2.5,290.25],[3,286],[3.5,281.75],[4,277.5],[4.5,273.25],[5,269],[5.5,264.75],[6,260.5],[6.5,256.25],[7,252],[7.5,247.75],[8,243.5],[8.5,239.25],[9,235],[9.5,230.75],[10,226.5],[10.5,222.25],[11,218],[11.5,213.75],[12,209.5],[12.5,205.25],[13,201],[13.5,196.75],[14,192.5],[14.5,188.25],[15,184],[15.5,179.75],[16,175.5],[16.5,171.25],[17,167],[17.5,162.75],[18,158.5],[18.5,154.25],[19,150],[19.5,145.75],[20,141.5],[20.5,137.25],[21,133],[21.5,128.75],[22,124.5],[22.5,120.25],[23,116],[23.5,111.75],[24,107.5],[24.5,103.25],[25,99],[25.5,94.75],[26,90.5],[26.5,86.25],[27,82],[27.5,77.75],[28,73.5],[28.5,69.25],[29,65],[29.5,60.75],[30,56.5],[30.5,52.25],[31,48],[31.5,43.75],[32,39.5],[32.5,35.25],[33,31],[33.5,26.75],[34,22.5],[34.5,18.25],[35,14],[35.5,9.75],[36,6.5],[36.5,3.75],[37,1.25],[37.5,0.6]]
+};
+
+const MIN_14 = [702, 705, 708, 711, 714, 717];
+const MIN_10 = [502, 505, 508, 511, 514, 517];
+
+function interpolar(tabla, metros) {
+  if(metros <= tabla[0][0]) return tabla[0][1];
+  if(metros >= tabla[tabla.length-1][0]) return tabla[tabla.length-1][1];
+  for(let i=0; i<tabla.length-1; i++) {
+    let a = tabla[i], b = tabla[i+1];
+    if(metros >= a[0] && metros <= b[0]) {
+      return a[1] + (b[1]-a[1]) * ((metros - a[0]) / (b[0] - a[0]));
+    }
+  }
+  return 0;
+}
+
+// --- LOGICA MEDIDAS ---
+function calcularMedida() {
+  let siloStr = document.getElementById('siloInput').value;
+  let cerealId = document.getElementById('cerealSelectMedida').value;
+  let metrosStr = document.getElementById('metrosInput').value;
+  let resDiv = document.getElementById('resMedida');
+  
+  let silo = parseInt(siloStr);
+  let metros = parseFloat(metrosStr);
+
+  if(isNaN(silo) || isNaN(metros) || !cerealId) {
+    resDiv.innerHTML = '0 <span>t</span>';
+    resDiv.className = 'resultado';
+    return;
+  }
+
+  let tipo = null;
+  if((silo >= 101 && silo <= 118) || (silo >= 301 && silo <= 318) || (silo >= 501 && silo <= 518) || (silo >= 701 && silo <= 718)) tipo = 'silos';
+  else if((silo >= 201 && silo <= 217) || (silo >= 401 && silo <= 417) || (silo >= 601 && silo <= 617)) tipo = 'entresilos';
+  
+  if(!tipo) {
+    resDiv.innerHTML = 'Silo Inválido';
+    resDiv.className = 'resultado error';
+    return;
+  }
+
+  if(MIN_14.includes(silo) && metros < 14) {
+    resDiv.innerHTML = 'Mínimo 14.0 m';
+    resDiv.className = 'resultado error';
+    return;
+  }
+  if(MIN_10.includes(silo) && metros < 10) {
+    resDiv.innerHTML = 'Mínimo 10.0 m';
+    resDiv.className = 'resultado error';
+    return;
+  }
+
+  let phRef = interpolar(DATA[tipo], metros);
+  let phCereal = PH[cerealId];
+  let tons = Math.round(phRef * phCereal / PH_BASE);
+
+  resDiv.className = 'resultado';
+  resDiv.innerHTML = `${tons} <span>t</span>`;
+}
+
+// --- LOGICA RELLENOS ---
+function calcularRelleno(inputEl) {
+  let fila = inputEl.parentElement;
+  let silo = parseInt(fila.querySelector('.in-silo').value);
+  let tonsActuales = parseFloat(fila.querySelector('.in-tons').value);
+  let resDiv = fila.querySelector('.res-relleno');
+  
+  let cerealId = document.getElementById('cerealSelectRelleno').value;
+
+  if(isNaN(silo) || isNaN(tonsActuales) || !cerealId) {
+    resDiv.innerText = '- t';
+    return;
+  }
+
+  let tipo = null;
+  if((silo >= 101 && silo <= 118) || (silo >= 301 && silo <= 318) || (silo >= 501 && silo <= 518) || (silo >= 701 && silo <= 718)) tipo = 'silos';
+  else if((silo >= 201 && silo <= 217) || (silo >= 401 && silo <= 417) || (silo >= 601 && silo <= 617)) tipo = 'entresilos';
+
+  if(!tipo) {
+    resDiv.innerText = 'Inv.';
+    return;
+  }
+
+  let limiteMetros = tipo === 'silos' ? 1.0 : 4.0;
+  if(MIN_14.includes(silo)) limiteMetros = 14.0;
+  if(MIN_10.includes(silo)) limiteMetros = 10.0;
+
+  let phRefLimite = interpolar(DATA[tipo], limiteMetros);
+  let tonsLimite = Math.round(phRefLimite * PH[cerealId] / PH_BASE);
+
+  let falta = tonsLimite - tonsActuales;
+  if(falta < 0) falta = 0;
+
+  resDiv.innerText = `${falta} t`;
+}
+
+// Re-calcular rellenos si se cambia el cereal de arriba
+document.getElementById('cerealSelectRelleno').addEventListener('change', function() {
+  let inputs = document.querySelectorAll('#listaRellenos .in-tons');
+  inputs.forEach(inp => {
+    if(inp.value) calcularRelleno(inp);
+  });
+});
+</script>
+</body>
+</html>
