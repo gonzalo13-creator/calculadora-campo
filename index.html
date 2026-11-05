@@ -19,9 +19,9 @@ h1 button{background:none;border:none;font-size:1.4rem;cursor:pointer;}
 .card{background:var(--card);border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 5px rgba(0,0,0,.1);}
 h2{font-size:1.1rem;margin:0 0 10px 0;border-bottom:2px solid var(--border);padding-bottom:5px;color:var(--primary);}
 .lbl{font-size:.8rem;font-weight:bold;margin-bottom:5px;display:block;opacity:0.8;}
-input, select {width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:1.1rem;margin-bottom:10px;font-weight:bold;}
-.resultado{background:var(--primary);color:#fff;padding:15px;border-radius:10px;text-align:center;margin-top:10px;font-size:2.5rem;font-weight:900;}
-.resultado.error{background:var(--error);font-size:1.5rem;}
+input, select {width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:1.1rem;margin-bottom:10px;font-weight:bold; outline:none; transition: border-color 0.3s;}
+.resultado{background:var(--primary);color:#fff;padding:15px;border-radius:10px;text-align:center;margin-top:10px;font-size:2.5rem;font-weight:900; transition: background-color 0.3s, color 0.3s;}
+.resultado.error{background:var(--error) !important; color: white !important; font-size:1.5rem;}
 .resultado span{font-size:1.2rem;font-weight:normal;}
 
 .fila-relleno{display:grid;grid-template-columns:1fr 1fr 1.2fr 30px;gap:5px;margin-bottom:5px;align-items:center;}
@@ -37,7 +37,7 @@ input, select {width:100%;padding:12px;border:2px solid var(--border);border-rad
 .cfg-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; background: var(--card); padding: 10px; border-radius: 8px; }
 .cfg-item input[type="text"] { flex: 2; margin: 0; padding: 8px; font-size: 0.9rem; }
 .cfg-item input[type="number"] { flex: 1; margin: 0; padding: 8px; font-size: 0.9rem; text-align: center; }
-.cfg-item input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 8px; padding: 0; }
+.cfg-item input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 8px; padding: 0; cursor:pointer;}
 .btn-borrar { background: var(--error); color: white; border: none; border-radius: 8px; padding: 10px; font-size: 1.1rem; cursor: pointer; }
 .btn-volver { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-top: 15px; }
 </style>
@@ -93,6 +93,7 @@ input, select {width:100%;padding:12px;border:2px solid var(--border);border-rad
 <!-- CONFIGURACION -->
 <div id="configScreen">
   <h2>⚙️ Configurar Cereales</h2>
+  <p style="text-align:center; font-size:0.8rem; opacity:0.7; margin-top:-10px;">El color se reflejará en los resultados.</p>
   <div id="listaConfig"></div>
   
   <h2 style="margin-top:20px;">Agregar Nuevo</h2>
@@ -118,6 +119,18 @@ const MIN_14 = [702, 705, 708, 711, 714, 717];
 const MIN_10 = [502, 505, 508, 511, 514, 517];
 
 let cereales = [];
+
+// --- LOGICA DE COLORES ---
+// Calcula si la letra debe ser blanca o negra según el fondo
+function getContrastColor(hexcolor){
+  if(!hexcolor) return '#ffffff';
+  if(hexcolor === '#ffffff' || hexcolor === '#fff') return '#000000';
+  let r = parseInt(hexcolor.substr(1,2),16);
+  let g = parseInt(hexcolor.substr(3,2),16);
+  let b = parseInt(hexcolor.substr(5,2),16);
+  let yiq = ((r*299)+(g*587)+(b*114))/1000;
+  return (yiq >= 128) ? '#000000' : '#ffffff';
+}
 
 // --- INICIALIZACION ---
 function cargarCereales() {
@@ -168,13 +181,19 @@ function calcularMedida() {
   let cerealId = document.getElementById('cerealSelectMedida').value;
   let metrosStr = document.getElementById('metrosInput').value;
   let resDiv = document.getElementById('resMedida');
+  let sel = document.getElementById('cerealSelectMedida');
   
+  let cerealObj = cereales.find(c => c.id === cerealId);
+  if(cerealObj) sel.style.borderColor = cerealObj.color;
+
   let silo = parseInt(siloStr);
   let metros = parseFloat(metrosStr);
 
-  if(isNaN(silo) || isNaN(metros) || !cerealId) {
+  if(isNaN(silo) || isNaN(metros) || !cerealObj) {
     resDiv.innerHTML = '0 <span>t</span>';
     resDiv.className = 'resultado';
+    resDiv.style.background = 'var(--primary)';
+    resDiv.style.color = '#fff';
     return;
   }
 
@@ -199,12 +218,15 @@ function calcularMedida() {
     return;
   }
 
-  let cerealObj = cereales.find(c => c.id === cerealId);
   let phRef = interpolar(DATA[tipo], metros);
   let tons = Math.round(phRef * cerealObj.ph / PH_BASE);
 
   resDiv.className = 'resultado';
   resDiv.innerHTML = `${tons} <span>t</span>`;
+  
+  // Aplicar color del cereal
+  resDiv.style.background = cerealObj.color;
+  resDiv.style.color = getContrastColor(cerealObj.color);
 }
 
 // --- LOGICA RELLENOS ---
@@ -282,7 +304,20 @@ function actualizarTotalRelleno() {
     let val = parseInt(txt);
     if(!isNaN(val)) total += val;
   });
-  document.getElementById('resTotalRelleno').innerHTML = `Total: ${total} <span>t</span>`;
+  
+  let resTotal = document.getElementById('resTotalRelleno');
+  resTotal.innerHTML = `Total: ${total} <span>t</span>`;
+
+  // Aplicar color al total
+  let cerealId = document.getElementById('cerealSelectRelleno').value;
+  let cerealObj = cereales.find(c => c.id === cerealId);
+  let selR = document.getElementById('cerealSelectRelleno');
+  
+  if(cerealObj) {
+    selR.style.borderColor = cerealObj.color;
+    resTotal.style.background = cerealObj.color;
+    resTotal.style.color = getContrastColor(cerealObj.color);
+  }
 }
 
 function recalcularTodosRellenos() {
@@ -365,6 +400,11 @@ function editarCereal(id, campo, valor) {
     if(campo === 'nombre') valor = valor.toUpperCase();
     c[campo] = valor;
     guardarCereales();
+    // Actualizar colores en vivo si se cambia desde config
+    if(campo === 'color') {
+        calcularMedida();
+        actualizarTotalRelleno();
+    }
   }
 }
 
@@ -406,6 +446,7 @@ function restaurarDefecto() {
 
 // INICIAR
 cargarCereales();
+calcularMedida();
 </script>
 </body>
 </html>
