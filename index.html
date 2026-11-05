@@ -19,7 +19,7 @@ h1 button{background:none;border:none;font-size:1.4rem;cursor:pointer;}
 .card{background:var(--card);border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 5px rgba(0,0,0,.1);}
 h2{font-size:1.1rem;margin:0 0 10px 0;border-bottom:2px solid var(--border);padding-bottom:5px;color:var(--primary);}
 .lbl{font-size:.8rem;font-weight:bold;margin-bottom:5px;display:block;opacity:0.8;}
-input, select {width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:1.1rem;margin-bottom:10px;font-weight:bold; outline:none; transition: border-color 0.3s;}
+input, select {width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:1.1rem;margin-bottom:10px;font-weight:bold; outline:none; transition: border-color 0.3s; background:var(--card); color:var(--text);}
 .resultado{background:var(--primary);color:#fff;padding:15px;border-radius:10px;text-align:center;margin-top:10px;font-size:2.5rem;font-weight:900; transition: background-color 0.3s, color 0.3s;}
 .resultado.error{background:var(--error) !important; color: white !important; font-size:1.5rem;}
 .resultado span{font-size:1.2rem;font-weight:normal;}
@@ -120,8 +120,6 @@ const MIN_10 = [502, 505, 508, 511, 514, 517];
 
 let cereales = [];
 
-// --- LOGICA DE COLORES ---
-// Calcula si la letra debe ser blanca o negra según el fondo
 function getContrastColor(hexcolor){
   if(!hexcolor) return '#ffffff';
   if(hexcolor === '#ffffff' || hexcolor === '#fff') return '#000000';
@@ -132,7 +130,6 @@ function getContrastColor(hexcolor){
   return (yiq >= 128) ? '#000000' : '#ffffff';
 }
 
-// --- INICIALIZACION ---
 function cargarCereales() {
   let guardados = localStorage.getItem('cereales_v2');
   if(guardados) {
@@ -156,11 +153,18 @@ function actualizarSelects() {
   const selM = document.getElementById('cerealSelectMedida');
   const selR = document.getElementById('cerealSelectRelleno');
   
-  let html = cereales.map(c => `<option value="${c.id}">${c.nombre} (PH ${c.ph})</option>`).join('');
-  let htmlR = cereales.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+  // Agregamos la opción vacía al principio
+  let opcionVacia = `<option value="" disabled selected>-- Elegir Cereal --</option>`;
+  
+  let html = opcionVacia + cereales.map(c => `<option value="${c.id}">${c.nombre} (PH ${c.ph})</option>`).join('');
+  let htmlR = opcionVacia + cereales.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
   
   selM.innerHTML = html;
   selR.innerHTML = htmlR;
+  
+  // Forzamos a que el valor quede vacío
+  selM.value = "";
+  selR.value = "";
 }
 
 function interpolar(tabla, metros) {
@@ -184,12 +188,23 @@ function calcularMedida() {
   let sel = document.getElementById('cerealSelectMedida');
   
   let cerealObj = cereales.find(c => c.id === cerealId);
-  if(cerealObj) sel.style.borderColor = cerealObj.color;
+  
+  // Si no hay cereal elegido, reseteamos todo
+  if(!cerealObj) {
+    sel.style.borderColor = 'var(--border)';
+    resDiv.innerHTML = '0 <span>t</span>';
+    resDiv.className = 'resultado';
+    resDiv.style.background = 'var(--primary)';
+    resDiv.style.color = '#fff';
+    return;
+  }
+
+  sel.style.borderColor = cerealObj.color;
 
   let silo = parseInt(siloStr);
   let metros = parseFloat(metrosStr);
 
-  if(isNaN(silo) || isNaN(metros) || !cerealObj) {
+  if(isNaN(silo) || isNaN(metros)) {
     resDiv.innerHTML = '0 <span>t</span>';
     resDiv.className = 'resultado';
     resDiv.style.background = 'var(--primary)';
@@ -224,7 +239,6 @@ function calcularMedida() {
   resDiv.className = 'resultado';
   resDiv.innerHTML = `${tons} <span>t</span>`;
   
-  // Aplicar color del cereal
   resDiv.style.background = cerealObj.color;
   resDiv.style.color = getContrastColor(cerealObj.color);
 }
@@ -263,7 +277,7 @@ function calcularRelleno(inputEl) {
   let cerealId = document.getElementById('cerealSelectRelleno').value;
   let cerealObj = cereales.find(c => c.id === cerealId);
 
-  if(isNaN(silo) || isNaN(tonsActuales) || !cerealObj) {
+  if(!cerealObj || isNaN(silo) || isNaN(tonsActuales)) {
     resDiv.innerText = '- t';
     return;
   }
@@ -308,7 +322,6 @@ function actualizarTotalRelleno() {
   let resTotal = document.getElementById('resTotalRelleno');
   resTotal.innerHTML = `Total: ${total} <span>t</span>`;
 
-  // Aplicar color al total
   let cerealId = document.getElementById('cerealSelectRelleno').value;
   let cerealObj = cereales.find(c => c.id === cerealId);
   let selR = document.getElementById('cerealSelectRelleno');
@@ -317,6 +330,10 @@ function actualizarTotalRelleno() {
     selR.style.borderColor = cerealObj.color;
     resTotal.style.background = cerealObj.color;
     resTotal.style.color = getContrastColor(cerealObj.color);
+  } else {
+    selR.style.borderColor = 'var(--border)';
+    resTotal.style.background = 'var(--primary)';
+    resTotal.style.color = '#fff';
   }
 }
 
@@ -332,7 +349,7 @@ function recalcularTodosRellenos() {
 function limpiarRellenos() {
   if(confirm("¿Borrar todos los rellenos de la lista?")) {
     document.getElementById('listaRellenos').innerHTML = '';
-    agregarFilaRelleno(); // Deja una vacía
+    agregarFilaRelleno();
     actualizarTotalRelleno();
     guardarFilasRelleno();
   }
@@ -400,7 +417,6 @@ function editarCereal(id, campo, valor) {
     if(campo === 'nombre') valor = valor.toUpperCase();
     c[campo] = valor;
     guardarCereales();
-    // Actualizar colores en vivo si se cambia desde config
     if(campo === 'color') {
         calcularMedida();
         actualizarTotalRelleno();
