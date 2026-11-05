@@ -13,7 +13,7 @@
   --primary: #1a4d1e; --primary-light: #3d7a42; --error: #c0392b;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:system-ui,-apple-system,Roboto,sans-serif;margin:0;padding:12px;background:var(--bg);color:var(--text);max-width:520px;margin:0 auto;}
+body{font-family:system-ui,-apple-system,Roboto,sans-serif;margin:0;padding:12px;background:var(--bg);color:var(--text);max-width:520px;margin:0 auto; padding-bottom: 30px;}
 h1{font-size:1.2rem;color:var(--primary);text-align:center;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;}
 h1 button{background:none;border:none;font-size:1.4rem;cursor:pointer;}
 .card{background:var(--card);border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 5px rgba(0,0,0,.1);}
@@ -24,11 +24,14 @@ input, select {width:100%;padding:12px;border:2px solid var(--border);border-rad
 .resultado.error{background:var(--error);font-size:1.5rem;}
 .resultado span{font-size:1.2rem;font-weight:normal;}
 
-.fila-relleno{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:5px;align-items:center;}
+.fila-relleno{display:grid;grid-template-columns:1fr 1fr 1.2fr 30px;gap:5px;margin-bottom:5px;align-items:center;}
 .fila-relleno input{padding:8px;font-size:1rem;margin-bottom:0;text-align:center;}
 .res-relleno{font-weight:bold;color:var(--primary);text-align:center;font-size:1.1rem;background:#e8f5e9;border-radius:5px;padding:8px 0;}
+.btn-borrar-fila{background:var(--error);color:white;border:none;border-radius:8px;height:100%;font-size:1.2rem;cursor:pointer;display:flex;justify-content:center;align-items:center;}
 
-/* CONFIGURACION OCULTA */
+.btn-add { background: var(--primary-light); color: #fff; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
+.btn-clear { background: var(--border); color: var(--text); border: none; padding: 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
+
 #configScreen { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 999; padding: 15px; overflow-y: auto; }
 #configScreen h2 { text-align: center; color: var(--primary); }
 .cfg-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; background: var(--card); padding: 10px; border-radius: 8px; }
@@ -62,21 +65,29 @@ input, select {width:100%;padding:12px;border:2px solid var(--border);border-rad
 <!-- SECCION 2: RELLENOS -->
 <div class="card">
   <h2>⛽ Calcular Relleno</h2>
-  <p style="font-size:0.8rem;margin-top:-5px;">Poné el cereal, el silo y las toneladas actuales.</p>
+  <p style="font-size:0.8rem;margin-top:-5px;">Poné el cereal y las toneladas actuales de cada silo.</p>
   
-  <span class="lbl">Cereal</span>
+  <span class="lbl">Cereal para todos los cálculos</span>
   <select id="cerealSelectRelleno" onchange="recalcularTodosRellenos()"></select>
 
-  <div class="fila-relleno" style="font-size:0.7rem;font-weight:bold;text-align:center;opacity:0.7;">
+  <div class="fila-relleno" style="font-size:0.7rem;font-weight:bold;text-align:center;opacity:0.7;margin-top:10px;">
     <div>Silo</div>
-    <div>Tons Actuales</div>
+    <div>Tons Act.</div>
     <div>Falta</div>
     <div></div>
   </div>
 
   <div id="listaRellenos">
-    <!-- Filas generadas por JS -->
+    <!-- Las filas se cargan acá -->
   </div>
+
+  <button class="btn-add" onclick="agregarFilaRelleno()">+ Agregar Silo</button>
+
+  <div class="resultado" id="resTotalRelleno" style="margin-top:15px; font-size: 2rem;">
+    Total: 0 <span>t</span>
+  </div>
+  
+  <button class="btn-clear" onclick="limpiarRellenos()">🗑️ Limpiar Lista</button>
 </div>
 
 <!-- CONFIGURACION -->
@@ -125,7 +136,7 @@ function cargarCereales() {
     ];
   }
   actualizarSelects();
-  crearFilasRelleno();
+  cargarFilasGuardadas();
 }
 
 function actualizarSelects() {
@@ -197,20 +208,28 @@ function calcularMedida() {
 }
 
 // --- LOGICA RELLENOS ---
-function crearFilasRelleno() {
+function agregarFilaRelleno(silo="", tons="") {
   let cont = document.getElementById('listaRellenos');
-  cont.innerHTML = '';
-  for(let i=0; i<5; i++) { // Creamos 5 filas listas
-    let div = document.createElement('div');
-    div.className = 'fila-relleno';
-    div.innerHTML = `
-      <input type="number" placeholder="Silo" class="in-silo" oninput="calcularRelleno(this)">
-      <input type="number" placeholder="Tons" class="in-tons" oninput="calcularRelleno(this)">
-      <div class="res-relleno">- t</div>
-      <div></div>
-    `;
-    cont.appendChild(div);
+  let div = document.createElement('div');
+  div.className = 'fila-relleno';
+  
+  div.innerHTML = `
+    <input type="number" placeholder="Silo" class="in-silo" value="${silo}" oninput="procesarCambioRelleno(this)">
+    <input type="number" placeholder="Tons" class="in-tons" value="${tons}" oninput="procesarCambioRelleno(this)">
+    <div class="res-relleno">- t</div>
+    <button class="btn-borrar-fila" onclick="eliminarFilaRelleno(this)">×</button>
+  `;
+  cont.appendChild(div);
+  
+  if(silo && tons) {
+    procesarCambioRelleno(div.querySelector('.in-tons'), false);
   }
+}
+
+function procesarCambioRelleno(inputEl, guardar=true) {
+  calcularRelleno(inputEl);
+  actualizarTotalRelleno();
+  if(guardar) guardarFilasRelleno();
 }
 
 function calcularRelleno(inputEl) {
@@ -249,11 +268,65 @@ function calcularRelleno(inputEl) {
   resDiv.innerText = `${falta} t`;
 }
 
+function eliminarFilaRelleno(btn) {
+  btn.parentElement.remove();
+  actualizarTotalRelleno();
+  guardarFilasRelleno();
+}
+
+function actualizarTotalRelleno() {
+  let filas = document.querySelectorAll('.res-relleno');
+  let total = 0;
+  filas.forEach(f => {
+    let txt = f.innerText.replace(' t', '').trim();
+    let val = parseInt(txt);
+    if(!isNaN(val)) total += val;
+  });
+  document.getElementById('resTotalRelleno').innerHTML = `Total: ${total} <span>t</span>`;
+}
+
 function recalcularTodosRellenos() {
   let inputs = document.querySelectorAll('#listaRellenos .in-tons');
   inputs.forEach(inp => {
     if(inp.value) calcularRelleno(inp);
   });
+  actualizarTotalRelleno();
+  guardarFilasRelleno();
+}
+
+function limpiarRellenos() {
+  if(confirm("¿Borrar todos los rellenos de la lista?")) {
+    document.getElementById('listaRellenos').innerHTML = '';
+    agregarFilaRelleno(); // Deja una vacía
+    actualizarTotalRelleno();
+    guardarFilasRelleno();
+  }
+}
+
+function guardarFilasRelleno() {
+  let datos = [];
+  let filas = document.querySelectorAll('#listaRellenos .fila-relleno');
+  filas.forEach(f => {
+    let silo = f.querySelector('.in-silo').value;
+    let tons = f.querySelector('.in-tons').value;
+    if(silo || tons) datos.push({silo, tons});
+  });
+  localStorage.setItem('rellenos_v1', JSON.stringify(datos));
+}
+
+function cargarFilasGuardadas() {
+  let guardados = localStorage.getItem('rellenos_v1');
+  if(guardados) {
+    let datos = JSON.parse(guardados);
+    if(datos.length > 0) {
+      datos.forEach(d => agregarFilaRelleno(d.silo, d.tons));
+    } else {
+      agregarFilaRelleno();
+    }
+  } else {
+    agregarFilaRelleno();
+  }
+  actualizarTotalRelleno();
 }
 
 // --- CONFIGURACION ---
